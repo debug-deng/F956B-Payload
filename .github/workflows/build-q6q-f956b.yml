@@ -1,0 +1,56 @@
+name: build-q6q-f956b
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: q6q-F956BXXS4DZG3
+      NDK_VERSION: 29.0.13599879
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Android SDK tools
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android NDK
+        run: sdkmanager --install "ndk;${NDK_VERSION}"
+
+      - name: Show toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_NDK_HOME="${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}"
+          "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang" --version
+
+      - name: Build all artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_NDK_HOME="${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}"
+          make TARGET="${TARGET}" ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" info all
+
+      - name: Build fixed-size release payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_NDK_HOME="${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}"
+          make TARGET="${TARGET}" ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: q6q-F956BXXS4DZG3-build
+          if-no-files-found: error
+          path: |
+            build/q6q-F956BXXS4DZG3/cve-2026-43499
+            build/q6q-F956BXXS4DZG3/cve-2026-43499-app.so
+            build/q6q-F956BXXS4DZG3/cve-2026-43499-app.release.so
+            build/q6q-F956BXXS4DZG3/cve-2026-43499-root

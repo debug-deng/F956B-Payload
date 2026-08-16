@@ -1,2 +1,5 @@
 /build/
 /diagnostics/
+/adb-bin/
+__pycache__/
+*.pyc
