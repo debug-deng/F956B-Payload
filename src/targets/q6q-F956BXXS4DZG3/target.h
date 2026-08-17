@@ -27,10 +27,14 @@
 #define APP_DEFER_FINAL_DRAIN_REAP 1
 #define APP_DEFER_ALL_DRAIN_REAPS 1
 #define APP_QUIET_RECLAIM_WINDOW 1
-#define APP_SLIDE_MIN_OBJECT_INDEX 27
-#define APP_SLIDE_MAX_OBJECT_INDEX 30
-#define APP_FOPS_MIN_OBJECT_INDEX 24
-#define APP_RECLAIM_MAX_DIRECT_BASE 0xffffff8080000000ULL
+/* Diagnostic pass: F956B leaks have landed at indexes 19/20 and in the
+ * ffffff84... direct-map range.  Do not discard them before validating the
+ * following slide/p0 stages; tighten these bounds after a usable candidate
+ * is observed on-device. */
+#define APP_SLIDE_MIN_OBJECT_INDEX 0
+#define APP_SLIDE_MAX_OBJECT_INDEX 31
+#define APP_FOPS_MIN_OBJECT_INDEX 0
+#define APP_RECLAIM_MAX_DIRECT_BASE 0xffffff9000000000ULL
 #define APP_FOPS_PSELECT_DELAY_USEC 50000
 #define SLIDE_SYNC_PSELECT_SYSCALL 1
 #define SLIDE_GUARD_PSELECT_SYSCALL 1
