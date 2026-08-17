@@ -90,7 +90,22 @@ void init_ctx(struct mm_ctx *ctx, size_t cnt) {
 }
 
 void resize_pipe_slots(int pipefd[2], size_t slots) {
-  SYSCHK(fcntl(pipefd[0], F_SETPIPE_SZ, slots * PAGE_SIZE));
+  int requested = (int)(slots * PAGE_SIZE);
+  errno = 0;
+  int actual = fcntl(pipefd[0], F_SETPIPE_SZ, requested);
+  if (actual < 0) {
+    int saved_errno = errno;
+    errno = 0;
+    int current = fcntl(pipefd[0], F_GETPIPE_SZ);
+    int current_errno = errno;
+    errno = saved_errno;
+    pr_warning("pipe resize requested=%d failed errno=%d current=%d current_errno=%d\n",
+               requested, saved_errno, current, current_errno);
+    return;
+  }
+  if (actual < requested) {
+    pr_warning("pipe resize requested=%d granted=%d\n", requested, actual);
+  }
 }
 
 void make_pipe_object(int pipefd[2]) {
