@@ -21,6 +21,7 @@ It intentionally does not contain Android application source code.
 | `essi-A566EXXSCCZG6` | Galaxy A56 5G `SM-A566E` | `6.6.102` | Device-tested |
 | `a36xq-A366WVLS3AYG1` | Galaxy A36 5G `SM-A366W` | `6.6.46` | Device-tested |
 | `dm3q-S9180ZHS8FZF5` | Galaxy S23 Ultra `SM-S9180` | `5.15.189` | Test in progress |
+| `q6q-F956BXXS4DZG3` | Galaxy Z Fold 6 `SM-F956B` | `6.1.145` | Hardware debugging in progress |
 
 Schema version 3 keeps each exploit and KernelSU artifact once. Its flat
 `models` and `kernelVersions` arrays define runtime compatibility. See
@@ -83,3 +84,78 @@ The SM-A366W AYG1 device validation is in
 [`docs/SM-A366W-A366WVLS3AYG1.md`](docs/SM-A366W-A366WVLS3AYG1.md).
 
 Use only on devices you own or are explicitly authorized to test.
+
+## SM-F956B / F956BXXS4DZG3 status
+
+The F956B target is restricted to the following device identity:
+
+```text
+samsung/q6qxxx/q6q:16/BP4A.251205.006/F956BXXS4DZG3:user/release-keys
+```
+
+The target profile and the connected validation device have been cross-checked
+against the model, codename, kernel release, Android version and firmware
+fingerprint. The current physical-load candidates are:
+
+```text
+P0_PHYS_OFFSET      = 0x80000000
+P0_KERNEL_PHYS_LOAD = 0x80080000
+```
+
+Do not use this target for another model, another firmware revision, or a
+different fingerprint.
+
+### Current validation result
+
+The F956B port is not yet a completed root solution. The best observed run has
+reached a real pselect/physical-write window:
+
+```text
+pselect ret=2
+p0 physical write status=0 ok=1
+p0 pipe gate hits=0 changed=0
+```
+
+Most attempts still fail earlier in the KernelSnitch `sk_buff`/`mm_struct`
+heap-leak stage. The current fresh-session diagnostic build increases the page
+setup attempts and records `ready_wchan`/`guard_wchan`; it is intended to
+separate heap-layout failures from pselect timing failures. A log containing
+`sched_ok=1` alone is not success. The minimum exploit-side success evidence is
+`pselect ret>0` plus `p0 physical write status=0 ok=1`, followed by a valid pipe
+gate result.
+
+### Build and test workflow for F956B
+
+Linux/CI build:
+
+```sh
+make TARGET=q6q-F956BXXS4DZG3 ANDROID_NDK_HOME=/path/to/android-ndk all
+make TARGET=q6q-F956BXXS4DZG3 ANDROID_NDK_HOME=/path/to/android-ndk release
+```
+
+The project uses GitHub Actions for the reproducible Ubuntu/NDK build. The
+workflow uploads the app payload, release payload and root helper as one
+artifact. The Android application itself is maintained in the separate
+`Root-My-Galaxy` project and embeds the downloaded
+`cve-2026-43499-app.release.so` as the arm64 native library.
+
+For an authorized test device, install the rebuilt APK, keep the installation
+screen open, select `q6q-F956BXXS4DZG3`, and capture the in-app log. A reboot
+clears temporary root state; it does not prove or disprove the static profile.
+
+### Root handoff and KernelSU requirement
+
+The exploit stage and KernelSU late-load stage are separate gates. Even after a
+successful physical write, root is not confirmed until the exact F956B KMI
+module is embedded in `ksud`, late-load completes, and `su -c id` returns uid 0.
+The previously supplied F956B `ksud` was found to have no embedded
+`android14-6.1_kernelsu.ko`; `supported-kmis` was empty. That artifact must be
+rebuilt with the matching module before a successful exploit can become a
+working KernelSU root session.
+
+The detailed timeline, logs, failed builds, fixes and next calibration steps
+are maintained in:
+
+- [`docs/SM-F956B-F956BXXS4DZG3-session-log-2026-08-17.md`](docs/SM-F956B-F956BXXS4DZG3-session-log-2026-08-17.md)
+- [`docs/SM-F956B-F956BXXS4DZG3-hardware-validation.md`](docs/SM-F956B-F956BXXS4DZG3-hardware-validation.md)
+- [`docs/SM-F956B-F956BXXS4DZG3-progress.md`](docs/SM-F956B-F956BXXS4DZG3-progress.md)

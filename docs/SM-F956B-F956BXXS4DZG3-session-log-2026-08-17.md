@@ -166,6 +166,14 @@ prepare_kernel_page did not find usable nonzero source pointers
 
 ## 9. 当前文件与仓库状态
 
+## 9.2 build `(10)` fresh-session 结果
+
+build `(10)` 包含 `APP_REQUIRE_FRESH_P0_SESSION=1`、4 次 slide page setup
+重试，以及 `ready_wchan/guard_wchan` 诊断。真机测试中前置命中率继续提高，
+已观察到多个 `mm leaked`（object index 20、19、4、8、0），但截至当前日志
+仍未出现 `ready_wchan`、`guard_wchan` 或 `pselect returned`。因此 fresh-session
+尚未把 F956B 从 mm leak 推进到 pselect，root 仍未确认。
+
 ## 9.1 build `(7)` 真机结果
 
 本地包：`H:\Users\dsc\Downloads\q6q-F956BXXS4DZG3-build (7).zip`  
