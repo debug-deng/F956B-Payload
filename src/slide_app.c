@@ -543,8 +543,6 @@ void *slide_consumer_thread(void *arg __attribute__((unused))) {
       continue;
     }
 
-#if defined(APP_REQUIRE_FRESH_P0_SESSION) && APP_REQUIRE_FRESH_P0_SESSION
-    int tid = atomic_load(&slide_waiter_tid);
 #if defined(SLIDE_SYNC_PSELECT_SYSCALL) && SLIDE_SYNC_PSELECT_SYSCALL
     int ready_ok = -1;
     int guard_ok = -1;
@@ -554,6 +552,8 @@ void *slide_consumer_thread(void *arg __attribute__((unused))) {
     char ready_wchan[64] = "<not-read>";
     char guard_wchan[64] = "<not-read>";
 #endif
+#if defined(APP_REQUIRE_FRESH_P0_SESSION) && APP_REQUIRE_FRESH_P0_SESSION
+    int tid = atomic_load(&slide_waiter_tid);
     if (seq == 1) {
 #if defined(SLIDE_SYNC_PSELECT_SYSCALL) && SLIDE_SYNC_PSELECT_SYSCALL
       ready_ok = slide_wait_for_pselect_blocked(
