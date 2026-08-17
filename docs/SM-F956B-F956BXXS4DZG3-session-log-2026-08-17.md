@@ -166,6 +166,37 @@ prepare_kernel_page did not find usable nonzero source pointers
 
 ## 9. 当前文件与仓库状态
 
+## 9.1 build `(7)` 真机结果
+
+本地包：`H:\Users\dsc\Downloads\q6q-F956BXXS4DZG3-build (7).zip`  
+设备：`RFCX70YRBLX`  
+结果：24 次重试全部结束，APK 显示“安装失败”，设备未取得 root。
+
+第 12 次出现了本轮最重要的进展：
+
+```text
+mm leaked=ffffff804d3df800 base=ffffff804d3d8000 object_index=24
+slide pselect returned nfds=320 pad=0 ret=2 errno=0 elapsed_usec=500599
+  ready=1 seen=1 entered=1 calls=1 sched_ok=1
+p0 physical write status=0 ok=1
+p0 pipe gate hits=0 changed=0
+```
+
+这证明：
+
+- `pselect ret=0` 不再是唯一阻塞点；同步/等待窗口调整后，确实出现了 `ret=2`。
+- 物理写窗口实际建立，`status=0 ok=1` 为真实成功，不是假阳性旁路。
+- 当前失败已进一步收敛到 pipe gate：物理写成功后 gate 仍为 `hits=0`。
+
+同一轮第 16 次仍出现 `ret=0`、`status=256`，说明时序命中仍有随机性，但不再是主线唯一问题。第 12 次的 `ret=2 + physical write ok=1` 是目前最远的可重复验证证据。
+
+因此下一轮不应再优先改 `P0_PHYS_OFFSET` 或 `P0_KERNEL_PHYS_LOAD`，而应在保留 pselect 同步参数的前提下，校准：
+
+1. gate marker 写入的页内偏移；
+2. gate object index / slot 与真实 pipe page 的对应关系；
+3. `verify_p0_pipe_oracle_gate()` 复制、读取和 marker 搜索路径；
+4. 物理写后 gate 检查的时序和 restore 行为。
+
 - target：`src/targets/q6q-F956BXXS4DZG3/target.h`
 - p0 指纹：`src/targets/q6q-F956BXXS4DZG3/p0_fingerprint.h`
 - 真机验证原记录：`docs/SM-F956B-F956BXXS4DZG3-hardware-validation.md`
@@ -173,4 +204,3 @@ prepare_kernel_page did not find usable nonzero source pointers
 - 最新修复提交：`9dbbe15`
 - 目标分支：`main`
 - CI remote：`debug-deng/F956B-Payload`
-
