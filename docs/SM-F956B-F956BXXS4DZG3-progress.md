@@ -419,11 +419,40 @@ $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-andr
 
 ## 当前下一步
 
+> 2026-08-17 的构建、真机测试、失败日志、修复提交和后续计划已集中整理到：
+> [SM-F956B-F956BXXS4DZG3-session-log-2026-08-17.md](SM-F956B-F956BXXS4DZG3-session-log-2026-08-17.md)
+
+当前以该总记录中的设备指纹和真机结论为准；本文件保留离线分析历史。
+
 1. 选择完整构建路径：
    - WSL / Linux 默认路径编译，或
    - Windows 原生覆盖 `TARGET_CC` 并修正 Makefile 的平台兼容点。
 2. 整理 README 或兼容性说明，方便后续真机验证。
 3. 具备完整构建能力后，再补 release / 产物级校验。
+
+## ADB 只读真机匹配核验
+
+已于 `2026-08-16` 通过本地 `adb-bin/adb.exe` 连接到一台在线设备：
+
+- serial：`RFCX70YRBLX`
+- model：`SM_F956B`
+- device：`q6q`
+
+只读核验结果：
+
+- `ro.build.fingerprint`：
+  `samsung/q6qxxx/q6q:16/BP4A.251205.006/F956BXXS4DZG3:user/release-keys`
+- `ro.build.version.release`：`16`
+- `ro.build.version.security_patch`：`2026-07-05`
+- `uname -a`：
+  `Linux localhost 6.1.145-android14-11-33418572-abF956BXXS4DZG3 #1 SMP PREEMPT Tue Jul 7 02:11:45 UTC 2026 aarch64 Toybox`
+
+结论：
+
+- 在线设备与本次离线分析目标 `SM-F956B / F956BXXS4DZG3` 精确匹配
+- 机型、device codename、Android 版本、安全补丁、内核 release 均已对齐
+- 因此当前生成的 `q6q-F956BXXS4DZG3` profile 与连接设备身份一致
+- 该步骤仅为只读身份核验，不等同于 payload 已在真机上执行成功
 
 ## GitHub 编译路径（新增建议）
 
@@ -461,3 +490,61 @@ $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-andr
   - `cve-2026-43499-app.release.so`
   - `cve-2026-43499-root`
 - 已补充 `.gitignore`，避免把 `adb-bin/`、`__pycache__`、`*.pyc` 推上远端
+
+运行结果（GitHub Actions）：
+
+- 仓库：`https://github.com/debug-deng/F956B-Payload`
+- workflow：`build-q6q-f956b`
+- run：`#1`
+- 触发方式：`push`
+- 触发时间：`2026-08-16 14:51`
+- 结果：`Success`
+- 总耗时：`59s`
+- 产物：
+  - `q6q-F956BXXS4DZG3-build`
+  - size：`146 KB`
+  - digest：`sha256:c9418db27aa758a31d28bdda172f2f93c7f658c8fd8b31fb7017f0236c02f956`
+- 注释：
+  - 1 条 warning：`actions/upload-artifact@v4` 在 runner 上被强制迁移到 Node.js 24
+  - 本次不影响构建成功，但后续可考虑把 artifact action 升级到更新主版本以消除此警告
+
+## 构建产物本地落地记录
+
+远端构建产物已确认存在于 GitHub Actions artifact：
+
+- artifact：`q6q-F956BXXS4DZG3-build`
+- 包含：
+  - `cve-2026-43499`
+  - `cve-2026-43499-app.so`
+  - `cve-2026-43499-app.release.so`
+  - `cve-2026-43499-root`
+
+用户后续反馈：
+
+- 已手动下载构建压缩包到：
+  `H:\Users\dsc\Downloads\q6q-F956BXXS4DZG3-build.zip`
+
+当前说明：
+
+- 该路径由用户在对话中提供，代表构建产物已被手动落地到本机下载目录
+- 本次会话后续未继续完成对该 zip 的自动解包与内容回读登记
+- 因此后续如需做本地校验，可直接以该 zip 为起点继续
+
+## 会话收口状态
+
+截至 `2026-08-16`，本地 F956B 目标相关工作已完成到以下阶段：
+
+- [x] 离线目标分析
+- [x] `target.h` / `p0_fingerprint.h` 落库
+- [x] ADB 只读真机身份精确匹配
+- [x] GitHub Actions 远端完整构建成功
+- [x] 远端 artifact 已生成
+- [x] 用户已手动下载 artifact zip 到本地
+- [ ] 本地解包后二次登记产物 hash / size
+- [ ] 真机执行层验证
+
+当前建议的后续动作：
+
+1. 对 `H:\Users\dsc\Downloads\q6q-F956BXXS4DZG3-build.zip` 做本地解包和产物清单登记。
+2. 如需要，补记 4 个构建物的本地 SHA-256 与文件大小。
+3. 将“静态/构建验证完成”与“真机执行验证完成”继续分开记录。
