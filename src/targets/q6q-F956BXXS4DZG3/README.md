@@ -23,7 +23,7 @@ Closed target-specific decisions include:
 - `SLIDE_TRACEFS_EVENT_ID = 106`
 - `SLIDE_TRACEFS_WORKER_CALLER_OFF = 0x000db1a0`
 - `P0_PHYS_OFFSET = 0x80000000`
-- `P0_KERNEL_PHYS_LOAD = 0x80080000`
+- `P0_KERNEL_PHYS_LOAD = 0x80000000`
 
 The F956B profile does not reuse the older E3Q logger string offset; it uses
 the F956B-specific `SLIDE_NFULNL_LOGGER_NAME_OFF = 0x016a61e6`.
